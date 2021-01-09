@@ -59,14 +59,13 @@ Preprocessors Check
 ###   
 
 
-
 ### data/input  : Input data format
 
-    data/input/titanic/raw/  : the raw files
-    data/input/titanic/raw2/ : the raw files  split manually
+    data/input/imdb_sentiment/raw/  : the raw files
+   
 
-    data/input/titanic/train/ :   features.zip ,  target.zip, cols_group.json  names are FIXED
-    data/input/titanic/test/ :   
+    data/input/imdb_sentiment/train/ :   features.zip ,  target.zip, cols_group.json  names are FIXED
+    data/input/imdb_sentiment/test/ :   
    features.zip or parquet format  , used for predictions
 
     File names Are FIXED, please create sub-folder  
