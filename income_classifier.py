@@ -15,50 +15,51 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ###### Path ########################################################################
-from source import util_feature
-config_file  = os.path.basename(__file__)
-
-print( os.getcwd())
-root      = os.path.abspath(os.getcwd()).replace("\\", "/") + "/"
-dir_data  = os.path.abspath( root + "/data/" ) + "/"
-dir_data  = dir_data.replace("\\", "/")
-print(root, dir_data)
+root_repo      =  os.path.abspath(os.getcwd()).replace("\\", "/") + "/"     ; print(root_repo)
+THIS_FILEPATH  =  os.path.abspath(__file__)
 
 
-def os_get_function_name():
-    import sys
-    return sys._getframe(1).f_code.co_name
+sys.path.append(root_repo)
+from source.util_feature import save,os_get_function_name
 
 
 def global_pars_update(model_dict,  data_name, config_name):
+    print("config_name", config_name)
+    dir_data  = root_repo + "/data/"  ; print("dir_data", dir_data)
+
     m                      = {}
-    m['config_path']       = root + f"/{config_file}"
+    m['config_path']       = THIS_FILEPATH
     m['config_name']       = config_name
 
-    ##### run_Preoprocess ONLY
-    m['path_data_preprocess'] = root + f'/data/input/{data_name}/train/'
+    #### peoprocess input path
+    m['path_data_preprocess'] = dir_data + f'/input/{data_name}/train/'
 
-    ##### run_Train  ONLY
-    m['path_data_train']   = root + f'/data/input/{data_name}/train/'
-    m['path_data_test']    = root + f'/data/input/{data_name}/test/'
-    #m['path_data_val']    = root + f'/data/input/{data_name}/test/'
-    m['path_train_output']    = root + f'/data/output/{data_name}/{config_name}/'
-    m['path_train_model']     = root + f'/data/output/{data_name}/{config_name}/model/'
-    m['path_features_store']  = root + f'/data/output/{data_name}/{config_name}/features_store/'
-    m['path_pipeline']        = root + f'/data/output/{data_name}/{config_name}/pipeline/'
+    #### train input path
+    m['path_data_train']      = dir_data + f'/input/{data_name}/train/'
+    m['path_data_test']       = dir_data + f'/input/{data_name}/test/'
+    #m['path_data_val']       = dir_data + f'/input/{data_name}/test/'
 
-    ##### Prediction
-    m['path_pred_data']    = root + f'/data/input/{data_name}/test/'
-    m['path_pred_pipeline']= root + f'/data/output/{data_name}/{config_name}/pipeline/'
-    m['path_pred_model']   = root + f'/data/output/{data_name}/{config_name}/model/'
-    m['path_pred_output']  = root + f'/data/output/{data_name}/pred_{config_name}/'
+    #### train output path
+    m['path_train_output']    = dir_data + f'/output/{data_name}/{config_name}/'
+    m['path_train_model']     = dir_data + f'/output/{data_name}/{config_name}/model/'
+    m['path_features_store']  = dir_data + f'/output/{data_name}/{config_name}/features_store/'
+    m['path_pipeline']        = dir_data + f'/output/{data_name}/{config_name}/pipeline/'
 
+
+    #### predict  input path
+    m['path_pred_data']       = dir_data + f'/input/{data_name}/test/'
+    m['path_pred_pipeline']   = dir_data + f'/output/{data_name}/{config_name}/pipeline/'
+    m['path_pred_model']      = dir_data + f'/output/{data_name}/{config_name}/model/'
+
+    #### predict  output path
+    m['path_pred_output']     = dir_data + f'/output/{data_name}/pred_{config_name}/'
 
     #####  Generic
     m['n_sample']             = model_dict['data_pars'].get('n_sample', 5000)
 
     model_dict[ 'global_pars'] = m
     return model_dict
+
 
 
 ####################################################################################
@@ -97,10 +98,8 @@ def income_status_lightgbm(path_model_out="") :
 
 
     model_dict = {'model_pars': {
-        'model_path'       : path_model_out
-
         ### LightGBM API model   #######################################
-        ,'model_class': model_class
+        'model_class': model_class
         ,'model_pars' : {'boosting_type':'gbdt', 'class_weight':None, 'colsample_bytree':1.0,
 						'importance_type':'split', 'learning_rate':0.001, 'max_depth':-1,
 						'min_child_samples':20, 'min_child_weight':0.001, 'min_split_gain':0,
@@ -157,7 +156,6 @@ def income_status_lightgbm(path_model_out="") :
           #  'coldate',  'coltext',
           'cols_model_group': [ # 'colnum_bin',
                                 'colcat_bin',
-
                                 'colnum_quantile_norm',
 
                                 # 'coltext',
@@ -227,7 +225,7 @@ python  income_classifier.py  preprocess
 python  income_classifier.py  train   --nsample 1000
 python  income_classifier.py  check
 python  income_classifier.py  predict
-python  income_classifier.py  run_all
+
 """
 if __name__ == "__main__":
     import fire

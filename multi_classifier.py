@@ -7,7 +7,6 @@ https://medium.com/@nitin9809/lightgbm-binary-classification-multi-class-classif
 
 
   python multi_classifier.py  train
-  python multi_classifier.py  check
   python multi_classifier.py  predict
 
 
@@ -17,48 +16,42 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ###### Path ########################################################################
-from source import run_train
-config_file  = os.path.basename(__file__)
-## config_file     = "multi_classifier.py"
+root_repo      =  os.path.abspath(os.getcwd()).replace("\\", "/") + "/"     ; print(root_repo)
+THIS_FILEPATH  =  os.path.abspath(__file__)
 
-
-print( os.getcwd())
-root = os.path.abspath(os.getcwd()).replace("\\", "/") + "/"
-print(root)
-
-dir_data  = os.path.abspath( root + "/data/" ) + "/"
-dir_data  = dir_data.replace("\\", "/")
-print(dir_data)
-
-def os_get_function_name():
-    import sys
-    return sys._getframe(1).f_code.co_name
-
+sys.path.append(root_repo)
+from source.util_feature import save,os_get_function_name
 
 def global_pars_update(model_dict,  data_name, config_name):
+    print("config_name", config_name)
+    dir_data  = root_repo + "/data/"  ; print("dir_data", dir_data)
+
     m                      = {}
-    m['config_path']       = root + f"/{config_file}"
+    m['config_path']       = THIS_FILEPATH
     m['config_name']       = config_name
 
-    ##### run_Preoprocess ONLY
-    m['path_data_preprocess'] = root + f'/data/input/{data_name}/train/'
+    #### peoprocess input path
+    m['path_data_preprocess'] = dir_data + f'/input/{data_name}/train/'
 
-    ##### run_Train  ONLY
-    m['path_data_train']   = root + f'/data/input/{data_name}/train/'
-    m['path_data_test']    = root + f'/data/input/{data_name}/test/'
-    #m['path_data_val']    = root + f'/data/input/{data_name}/test/'
-    m['path_train_output']    = root + f'/data/output/{data_name}/{config_name}/'
-    m['path_train_model']     = root + f'/data/output/{data_name}/{config_name}/model/'
-    m['path_features_store']  = root + f'/data/output/{data_name}/{config_name}/features_store/'
-    m['path_pipeline']        = root + f'/data/output/{data_name}/{config_name}/pipeline/'
+    #### train input path
+    m['path_data_train']      = dir_data + f'/input/{data_name}/train/'
+    m['path_data_test']       = dir_data + f'/input/{data_name}/test/'
+    #m['path_data_val']       = dir_data + f'/input/{data_name}/test/'
+
+    #### train output path
+    m['path_train_output']    = dir_data + f'/output/{data_name}/{config_name}/'
+    m['path_train_model']     = dir_data + f'/output/{data_name}/{config_name}/model/'
+    m['path_features_store']  = dir_data + f'/output/{data_name}/{config_name}/features_store/'
+    m['path_pipeline']        = dir_data + f'/output/{data_name}/{config_name}/pipeline/'
 
 
-    ##### Prediction
-    m['path_pred_data']    = root + f'/data/input/{data_name}/test/'
-    m['path_pred_pipeline']= root + f'/data/output/{data_name}/{config_name}/pipeline/'
-    m['path_pred_model']   = root + f'/data/output/{data_name}/{config_name}/model/'
-    m['path_pred_output']  = root + f'/data/output/{data_name}/pred_{config_name}/'
+    #### predict  input path
+    m['path_pred_data']       = dir_data + f'/input/{data_name}/test/'
+    m['path_pred_pipeline']   = dir_data + f'/output/{data_name}/{config_name}/pipeline/'
+    m['path_pred_model']      = dir_data + f'/output/{data_name}/{config_name}/model/'
 
+    #### predict  output path
+    m['path_pred_output']     = dir_data + f'/output/{data_name}/pred_{config_name}/'
 
     #####  Generic
     m['n_sample']             = model_dict['data_pars'].get('n_sample', 5000)
@@ -71,28 +64,25 @@ def global_pars_update(model_dict,  data_name, config_name):
 ####################################################################################
 config_default  = 'multi_lightgbm'
 
-
-colid   = 'pet_id'
-coly    = 'pet_category'
-coldate = ['issue_date','listing_date']
-colcat  = ['color_type','condition']
-colnum  = ['length(m)','height(cm)','X1','X2'] # ,'breed_category'
-colcross= ['condition', 'color_type','length(m)', 'height(cm)', 'X1', 'X2']  # , 'breed_category'
+coly     = 'pet_category'
+coldate  = ['issue_date','listing_date']
+colcat   = ['color_type','condition']
+colnum   = ['length(m)','height(cm)','X1','X2'] # ,'breed_category'
+colcross = ['condition', 'color_type','length(m)', 'height(cm)', 'X1', 'X2']  # , 'breed_category'
 
 
-cols_input_type_1 = {  "coly"   :   coly
-                    ,"colid"  :   colid
-                    ,"colcat" :   colcat
-                    ,"colnum" :   colnum
-                    ,"coltext" :  []
-                    ,"coldate" :  []
-                    ,"colcross" : colcross
+cols_input_type_1 = {  "coly"  :   coly
+                    ,"colid"   :   'pet_id'
+                    ,"colcat" :    colcat
+                    ,"colnum" :    colnum
+                    ,"coltext" :   []
+                    ,"coldate" :   []
+                    ,"colcross" :  colcross
                    }
-
 
 #####################################################################################
 ##### Params ########################################################################
-def multi_lightgbm(path_model_out="") :
+def multi_lightgbm() :
     """
        multiclass
     """
@@ -100,23 +90,20 @@ def multi_lightgbm(path_model_out="") :
     model_name        = 'LGBMClassifier'
     n_sample          = 6000
 
-    def post_process_fun(y):
-        ### After prediction is done
+    def post_process_fun(y):          ### After prediction is done
         return  int(y)
 
-    def pre_process_fun_multi(y):
-        ### Before the prediction is done
+    def pre_process_fun_multi(y):     ### Before the prediction is done
         return  int(y)
 
 
     model_dict = {'model_pars': {
-        'model_path'       : path_model_out
+        #'model_path'       : path_model_out
 
         ### LightGBM API model  ########################################
-        ,'model_class': model_name    ## ACTUAL Class name for model_sklearn.py
+        'model_class': model_name    ## ACTUAL Class name for model_sklearn.py
         ,'model_pars'       : {'objective': 'multiclass','num_class':4,'metric':'multi_logloss',
                                 'learning_rate':0.03,'boosting_type':'gbdt'
-
                               }
 
         ### After prediction  ##########################################
@@ -239,16 +226,6 @@ def predict(config=None, nsample=None):
                               )
 
 
-def run_all():
-    data_profile()
-    preprocess()
-    train()
-    check()
-    predict()
-
-
-
-
 
 ###########################################################################################################
 ###########################################################################################################
@@ -258,7 +235,6 @@ python  multi_classifier.py  preprocess
 python  multi_classifier.py  train
 python  multi_classifier.py  check
 python  multi_classifier.py  predict
-python  multi_classifier.py  run_all
 """
 if __name__ == "__main__":
     import fire

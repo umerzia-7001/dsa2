@@ -227,12 +227,21 @@ def _get_tsfresh_melted_features_single_row(single_row_df, index_cols):
 
     for col in index_cols:
         X_feat_T[col] = np.repeat(single_row_df[col].tolist()[0], len(X_feat_T.index))
+#<<<<<<< main
     # X_feat_T["item_id"] = np.repeat(single_row_df["item_id"].tolist()[0], len(X_feat_T.index))
     # X_feat_T["id"] = np.repeat(single_row_df["id"].tolist()[0], len(X_feat_T.index))
     # X_feat_T["cat_id"] = np.repeat(single_row_df["cat_id"].tolist()[0], len(X_feat_T.index))
     # X_feat_T["dept_id"] = np.repeat(single_row_df["dept_id"].tolist()[0], len(X_feat_T.index))
     # X_feat_T["store_id"] = np.repeat(single_row_df["store_id"].tolist()[0], len(X_feat_T.index))
     # X_feat_T["state_id"] = np.repeat(single_row_df["state_id"].tolist()[0], len(X_feat_T.index))
+=======
+    # X_feat_T["item_id"] = np.repeat(df_single_row["item_id"].tolist()[0], len(X_feat_T.index))
+    # X_feat_T["id"] = np.repeat(df_single_row["id"].tolist()[0], len(X_feat_T.index))
+    # X_feat_T["cat_id"] = np.repeat(df_single_row["cat_id"].tolist()[0], len(X_feat_T.index))
+    # X_feat_T["dept_id"] = np.repeat(df_single_row["dept_id"].tolist()[0], len(X_feat_T.index))
+    # X_feat_T["store_id"] = np.repeat(df_single_row["store_id"].tolist()[0], len(X_feat_T.index))
+    # X_feat_T["state_id"] = np.repeat(df_single_row["state_id"].tolist()[0], len(X_feat_T.index))
+#>>>>>>> multi
     X_feat_T["variable"] = X_feat_T.index
 
     single_row_df["variable"] = pd.Series(["demand"])

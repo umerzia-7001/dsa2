@@ -11,6 +11,11 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import re
+
+# from tsfresh import extract_relevant_features, extract_features
+# from tsfresh.utilities.dataframe_functions import roll_time_series
+
 
 #############################################################################################
 print("os.getcwd", os.getcwd())
@@ -61,7 +66,7 @@ def load(file_name):
 
 def load_dataset(path_data_x, path_data_y='',  colid="jobId", n_sample=-1):
     log('loading', colid, path_data_x)
-    import glob 
+    import glob
     import ntpath
     flist = glob.glob( ntpath.dirname(path_data_x)+"/*" )#ntpath.dirname(path_data_x)+"/*"
     flist = [ f for f in flist if os.path.splitext(f)[1][1:].strip().lower() in [ 'zip', 'parquet'] and ntpath.basename(f)[:8] in ['features'] ]
@@ -83,8 +88,8 @@ def load_dataset(path_data_x, path_data_y='',  colid="jobId", n_sample=-1):
       df[colid] = np.arange(0, len(df))
     df        = df.set_index(colid)
 
-        
-    if n_sample > 0: 
+
+    if n_sample > 0:
         df = df.iloc[:n_sample, :]
 
     log("###### Load dfy target values ###################################")
@@ -96,16 +101,16 @@ def load_dataset(path_data_x, path_data_y='',  colid="jobId", n_sample=-1):
         for fi in flist :
             if ".parquet" in fi :  dfi = pd.read_parquet(fi) # + "/features.zip")
             if ".zip" in fi  :     dfi = pd.read_csv(fi) # + "/features.zip")
-            dfy = pd.concat((dfy, dfi)) 
+            dfy = pd.concat((dfy, dfi))
 
-        log("dfy", dfy.head(4).T)        
+        log("dfy", dfy.head(4).T)
         if colid not in list(dfy.columns) :
             dfy[colid] = np.arange(0, len(dfy))
-        
+
         df = df.join(dfy.set_index(colid), on=colid, how='left', )
     except Exception as e :
         log("dfy not loaded", path_data_y, e  )
-        
+
     return df
 
 
@@ -113,66 +118,66 @@ def load_dataset(path_data_x, path_data_y='',  colid="jobId", n_sample=-1):
 
 
 def pd_read_file(path_glob="*.pkl", ignore_index=True,  cols=None,
-                  verbose=False, nrows=-1, concat_sort=True, n_pool=1, 
+                  verbose=False, nrows=-1, concat_sort=True, n_pool=1,
                   drop_duplicates=None, shop_id=None, nmax= 1000000000,  **kw):
   """
      "*.pkl, *.parquet"
-  
-  """ 
-  # os.environ["MODIN_ENGINE"] = "dask"   
-  # import modin.pandas as pd  
+
+  """
+  # os.environ["MODIN_ENGINE"] = "dask"
+  # import modin.pandas as pd
   import glob, gc,  pandas as pd, os
   readers = {
           ".pkl"     : pd.read_pickle,
           ".parquet" : pd.read_parquet,
-          ".csv"     : pd.read_csv,           
+          ".csv"     : pd.read_csv,
           ".txt"     : pd.read_csv,
    }
   from multiprocessing.pool import ThreadPool
   pool = ThreadPool(processes=n_pool)
-  
+
   path_glob_list = [ t.strip() for t in  path_glob.split(",") ]
   file_list = []
-  for pg in path_glob_list : 
-    file_list = file_list + glob.glob(pg)     
+  for pg in path_glob_list :
+    file_list = file_list + glob.glob(pg)
   file_list.sort()
   n_file = len(file_list)
-  if n_file < 1: raise Exception("No file exist", path_glob)  
-  
+  if n_file < 1: raise Exception("No file exist", path_glob)
+
   # print("ok", verbose)
   dfall = pd.DataFrame()
 
   if verbose : log(n_file,  n_file // n_pool )
   for j in range(n_file // n_pool +1 ) :
-      log("Pool", j)  
-      job_list =[]   
-      for i in range(n_pool):  
-         if n_pool*j + i >= n_file  : break 
+      log("Pool", j)
+      job_list =[]
+      for i in range(n_pool):
+         if n_pool*j + i >= n_file  : break
          filei         = file_list[n_pool*j + i]
          ext           = os.path.splitext(filei)[1]
-         pd_reader_obj = readers[ext]                            
-         job_list.append( pool.apply_async(pd_reader_obj, (filei, )))  
+         pd_reader_obj = readers[ext]
+         job_list.append( pool.apply_async(pd_reader_obj, (filei, )))
          if verbose : log(j, filei)
-    
-      for i in range(n_pool):  
-        if i >= len(job_list): break  
+
+      for i in range(n_pool):
+        if i >= len(job_list): break
         dfi   = job_list[i].get()
 
-        if shop_id is not None and "shop_id" in  dfi.columns : dfi = dfi[ dfi['shop_id'] == shop_id ]         
-        if cols is not None :    dfi = dfi[cols] 
+        if shop_id is not None and "shop_id" in  dfi.columns : dfi = dfi[ dfi['shop_id'] == shop_id ]
+        if cols is not None :    dfi = dfi[cols]
         if nrows > 0        :    dfi = dfi.iloc[:nrows,:]
-        if drop_duplicates is not None  : dfi = dfi.drop_duplicates(drop_duplicates) 
-        gc.collect()            
-            
-        dfall = pd.concat( (dfall, dfi), ignore_index=ignore_index, sort= concat_sort)        
+        if drop_duplicates is not None  : dfi = dfi.drop_duplicates(drop_duplicates)
+        gc.collect()
+
+        dfall = pd.concat( (dfall, dfi), ignore_index=ignore_index, sort= concat_sort)
         #log("Len", n_pool*j + i, len(dfall))
         del dfi; gc.collect()
-        
+
         if len(dfall) > nmax : return dfall
-        
+
   if verbose : log(n_file, j * n_file//n_pool )
   gc.collect()
-  return dfall  
+  return dfall
 
 
 
@@ -379,7 +384,7 @@ def test_heteroscedacity(y, y_pred, pred_value_only=1):
        Test  Heteroscedacity :  Residual**2  = Linear(X, Pred, Pred**2)
        F pvalues < 0.01 : Null is Rejected  ---> Not Homoscedastic
        het_breuschpagan
-    
+
     """
     from statsmodels.stats.diagnostic import het_breuschpagan, het_white
     error    = y_pred - y
@@ -399,7 +404,7 @@ def test_normality(error, distribution="norm", test_size_limit=5000):
     """
        Test  Is Normal distribution
        F pvalues < 0.01 : Rejected
-    
+
     """
     from scipy.stats import shapiro, anderson, kstest
 
@@ -424,7 +429,7 @@ def test_mutualinfo(error, Xtest, colname=None, bins=5):
     """
        Test  Error vs Input Variable Independance byt Mutual ifno
        sklearn.feature_selection.mutual_info_classif(X, y, discrete_features='auto', n_neighbors=3, copy=True, random_state=None)
-    
+
     """
     from sklearn.feature_selection import mutual_info_classif
     error = pd.DataFrame({"error": error})
@@ -540,7 +545,7 @@ def pd_feature_generate_cross(df, cols, cols_cross_input=None, pct_threshold=0.2
         # coli, colj = colij.split("-")[0], colij.split("-")[1]
         dfX_cross[coli + "-" + colj] = dfX[coli] * dfX[colj]
 
-      
+
     del dfX_cross[cols[0]]      #when colcross is empty, this make problem
     return dfX_cross, col_cross
 

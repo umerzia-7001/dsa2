@@ -75,7 +75,7 @@ def get_config_path(config=''):
 
 #####################################################################################
 ########## Profile data #############################################################
-def data_profile(config=''):
+def data_profile2(config=''):
     """
 
     """
@@ -90,6 +90,13 @@ def data_profile(config=''):
                n_sample     = 5000,
               ) 
 
+
+def data_profile(path_data="", path_output="", n_sample= 5000):
+   from source.run_feature_profile import run_profile
+   run_profile(path_data   = path_data,
+               path_output = path_output + "/profile/",
+               n_sample    = n_sample,
+              )
 
 ###################################################################################
 ########## Preprocess #############################################################

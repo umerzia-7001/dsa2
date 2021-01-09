@@ -13,7 +13,11 @@ warnings.filterwarnings('ignore')
 ####################################################################################
 ###### Path ########################################################################
 root_repo      =  os.path.abspath(os.getcwd()).replace("\\", "/") + "/"     ; print(root_repo)
+#<<<<<<< main
 THIS_FILENAME  =  os.path.basename(__file__) 
+=======
+# THIS_FILENAME  =  os.path.basename(__file__) 
+#>>>>>>> multi
 THIS_FILEPATH  =  os.path.abspath(__file__) 
 
 
@@ -215,12 +219,21 @@ def pd_col_myfun(df=None, col=None, pars={}):
 
 #####################################################################################
 ########## Profile data #############################################################
+#<<<<<<< main
+=======
+from core_run import  data_profile
+# def data_profile(path_data="", path_output="", n_sample= 5000):
+"""
+
+#>>>>>>> multi
 def data_profile(path_data="", path_output="", n_sample= 5000):
    from source.run_feature_profile import run_profile
    run_profile(path_data   = path_data,
                path_output = path_output + "/profile/",
                n_sample    = n_sample,
               )
+"""
+
 
 
 
